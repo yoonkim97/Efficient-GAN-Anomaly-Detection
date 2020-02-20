@@ -34,7 +34,7 @@ def run(args):
 
     if args.example and args.dataset and args.split:
         try:
-            mod_name = "{}.{}_{}".format(args.example, args.split, args.dataset)
+            mod_name = "{}/{}_{}".format(args.example, args.split, args.dataset)
             logger.info("Running script at {}".format(mod_name))
 
             mod = importlib.import_module(mod_name)
