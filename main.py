@@ -9,6 +9,7 @@ import urllib3
 import zipfile
 
 import data
+from gan import run_mnist 
 
 # Logging
 console = logging.StreamHandler()
@@ -32,12 +33,12 @@ def run(args):
 
     has_effect = False
 
-    if args.example and args.dataset and args.split:
+    if args.dataset and args.split:
         try:
-            mod_name = "{}.{}_{}".format(args.example, args.split, args.dataset)
-            logger.info("Running script at {}".format(mod_name))
+           # mod_name = "{}.{}_{}".format(args.example, args.split, args.dataset)
+           # logger.info("Running script at {}".format(mod_name))
 
-            from gan import run_mnist
+           #  mod = importlib.import_module(mod_name)
             run_mnist.run(args.nb_epochs, args.w, args.m, args.d, args.label, args.rd)
 
         except Exception as e:
