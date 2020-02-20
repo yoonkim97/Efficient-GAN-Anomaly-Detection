@@ -37,8 +37,8 @@ def run(args):
             mod_name = "{}.{}_{}".format(args.example, args.split, args.dataset)
             logger.info("Running script at {}".format(mod_name))
 
-            mod = importlib.import_module(mod_name)
-            mod.run(args.nb_epochs, args.w, args.m, args.d, args.label, args.rd)
+            from gan import run_mnist
+            run_mnist.run(args.nb_epochs, args.w, args.m, args.d, args.label, args.rd)
 
         except Exception as e:
             logger.exception(e)
