@@ -35,6 +35,7 @@ def run(args):
 
     if args.dataset and args.split:
         try:
+            print(args.example)
            # mod_name = "{}.{}_{}".format(args.example, args.split, args.dataset)
            # logger.info("Running script at {}".format(mod_name))
 
