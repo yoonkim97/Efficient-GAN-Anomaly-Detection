@@ -59,9 +59,9 @@ def train_and_test(nb_epochs, weight, method, degree, random_seed, label):
     logger = logging.getLogger("BiGAN.train.mnist.{}.{}".format(method,label))
 
     # Placeholders
-    input_pl = tf.placeholder(tf.float32, shape=data.get_shape_input(), name="input")
-    is_training_pl = tf.placeholder(tf.bool, [], name='is_training_pl')
-    learning_rate = tf.placeholder(tf.float32, shape=(), name="lr_pl")
+    input_pl = tf.compat.v1.placeholder(tf.float32, shape=data.get_shape_input(), name="input")
+    is_training_pl = tf.compat.v1.placeholder(tf.bool, [], name='is_training_pl')
+    learning_rate = tf.compat.v1.placeholder(tf.float32, shape=(), name="lr_pl")
 
     # Data
     trainx, trainy = data.get_train(label, True)
@@ -342,5 +342,5 @@ def run(nb_epochs, weight, method, degree, label, random_seed=42):
     """ Runs the training process"""
     with tf.Graph().as_default():
         # Set the graph level seed
-        tf.set_random_seed(random_seed)
+        tf.compat.v1.set_random_seed(random_seed)
         train_and_test(nb_epochs, weight, method, degree, random_seed, label)
