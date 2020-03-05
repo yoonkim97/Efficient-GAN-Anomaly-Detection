@@ -9,7 +9,8 @@ import data.mnist as data
 from utils.evaluations import do_prc
 
 RANDOM_SEED = 13
-FREQ_PRINT = 20 # print frequency image tensorboard [20]
+FREQ_PRINT = 20  # print frequency image tensorboard [20]
+
 
 def get_getter(ema):  # to update neural net with moving avg variables, suitable for ss learning cf Saliman
     def ema_getter(getter, name, *args, **kwargs):
@@ -18,6 +19,7 @@ def get_getter(ema):  # to update neural net with moving avg variables, suitable
         return ema_var if ema_var else var
 
     return ema_getter
+
 
 def display_parameters(batch_size, starting_lr, ema_decay,
                        weight, method, degree, label):
@@ -31,6 +33,7 @@ def display_parameters(batch_size, starting_lr, ema_decay,
     print('Degree for L norms: ', degree)
     print('Anomalous label: ', label)
 
+
 def display_progression_epoch(j, id_max):
     '''See epoch progression
     '''
@@ -38,13 +41,14 @@ def display_progression_epoch(j, id_max):
     sys.stdout.write(str(batch_progression) + ' % epoch' + chr(13))
     _ = sys.stdout.flush
 
+
 def create_logdir(method, weight, label, rd):
     """ Directory to save training logs, weights, biases, etc."""
     return "bigan/train_logs/mnist/{}/{}/{}/{}".format(weight, method, label, rd)
 
+
 def train_and_test(nb_epochs, weight, method, degree, random_seed, label):
     """ Runs the Bigan on the MNIST dataset
-
     Note:
         Saves summaries on tensorboard. To display them, please use cmd line
         tensorboard --logdir=model.training_logdir() --port=number
@@ -56,7 +60,7 @@ def train_and_test(nb_epochs, weight, method, degree, random_seed, label):
         anomalous_label (int): int in range 0 to 10, is the class/digit
                                 which is considered outlier
     """
-    logger = logging.getLogger("BiGAN.train.mnist.{}.{}".format(method,label))
+    logger = logging.getLogger("BiGAN.train.mnist.{}.{}".format(method, label))
 
     # Placeholders
     input_pl = tf.compat.v1.placeholder(tf.float32, shape=data.get_shape_input(), name="input")
@@ -96,18 +100,22 @@ def train_and_test(nb_epochs, weight, method, degree, random_seed, label):
         reconstruct = gen(z_gen, is_training=is_training_pl, reuse=True)
 
     with tf.variable_scope('discriminator_model'):
-        l_encoder, inter_layer_inp = dis(z_gen,input_pl, is_training=is_training_pl)
+        l_encoder, inter_layer_inp = dis(z_gen, input_pl, is_training=is_training_pl)
         l_generator, inter_layer_rct = dis(z, x_gen, is_training=is_training_pl, reuse=True)
 
     with tf.name_scope('loss_functions'):
         # discriminator
-        loss_dis_enc = tf.reduce_mean(tf.nn.sigmoid_cross_entropy_with_logits(labels=tf.ones_like(l_encoder),logits=l_encoder))
-        loss_dis_gen = tf.reduce_mean(tf.nn.sigmoid_cross_entropy_with_logits(labels=tf.zeros_like(l_generator),logits=l_generator))
+        loss_dis_enc = tf.reduce_mean(
+            tf.nn.sigmoid_cross_entropy_with_logits(labels=tf.ones_like(l_encoder), logits=l_encoder))
+        loss_dis_gen = tf.reduce_mean(
+            tf.nn.sigmoid_cross_entropy_with_logits(labels=tf.zeros_like(l_generator), logits=l_generator))
         loss_discriminator = loss_dis_gen + loss_dis_enc
         # generator
-        loss_generator = tf.reduce_mean(tf.nn.sigmoid_cross_entropy_with_logits(labels=tf.ones_like(l_generator),logits=l_generator))
+        loss_generator = tf.reduce_mean(
+            tf.nn.sigmoid_cross_entropy_with_logits(labels=tf.ones_like(l_generator), logits=l_generator))
         # encoder
-        loss_encoder = tf.reduce_mean(tf.nn.sigmoid_cross_entropy_with_logits(labels=tf.zeros_like(l_encoder),logits=l_encoder))
+        loss_encoder = tf.reduce_mean(
+            tf.nn.sigmoid_cross_entropy_with_logits(labels=tf.zeros_like(l_encoder), logits=l_encoder))
 
     with tf.name_scope('optimizers'):
         # control op dependencies for batch norm and trainable variables
@@ -195,24 +203,23 @@ def train_and_test(nb_epochs, weight, method, degree, random_seed, label):
             delta = input_pl - reconstruct_ema
             delta_flat = tf.contrib.layers.flatten(delta)
             gen_score = tf.norm(delta_flat, ord=degree, axis=1,
-                              keep_dims=False, name='epsilon')
+                                keep_dims=False, name='epsilon')
 
         with tf.variable_scope('Discriminator_loss'):
             if method == "cross-e":
                 dis_score = tf.nn.sigmoid_cross_entropy_with_logits(
-                    labels=tf.ones_like(l_generator_ema),logits=l_generator_ema)
+                    labels=tf.ones_like(l_generator_ema), logits=l_generator_ema)
 
             elif method == "fm":
                 fm = inter_layer_inp_ema - inter_layer_rct_ema
                 fm = tf.contrib.layers.flatten(fm)
                 dis_score = tf.norm(fm, ord=degree, axis=1,
-                                 keep_dims=False, name='d_loss')
+                                    keep_dims=False, name='d_loss')
 
             dis_score = tf.squeeze(dis_score)
 
         with tf.variable_scope('Score'):
             list_scores = (1 - weight) * gen_score + weight * dis_score
-
 
     logdir = create_logdir(weight, method, label, random_seed)
 
@@ -232,22 +239,22 @@ def train_and_test(nb_epochs, weight, method, degree, random_seed, label):
             lr = starting_lr
             begin = time.time()
 
-             # construct randomly permuted minibatches
+            # construct randomly permuted minibatches
             trainx = trainx[rng.permutation(trainx.shape[0])]  # shuffling dataset
             trainx_copy = trainx_copy[rng.permutation(trainx.shape[0])]
             train_loss_dis, train_loss_gen, train_loss_enc = [0, 0, 0]
 
             # training
             for t in range(nr_batches_train):
-                
-                display_progression_epoch(t, nr_batches_train)             
+
+                display_progression_epoch(t, nr_batches_train)
                 ran_from = t * batch_size
                 ran_to = (t + 1) * batch_size
 
                 # train discriminator
                 feed_dict = {input_pl: trainx[ran_from:ran_to],
                              is_training_pl: True,
-                             learning_rate:lr}
+                             learning_rate: lr}
 
                 _, ld, sm = sess.run([train_dis_op,
                                       loss_discriminator,
@@ -259,22 +266,22 @@ def train_and_test(nb_epochs, weight, method, degree, random_seed, label):
                 # train generator and encoder
                 feed_dict = {input_pl: trainx_copy[ran_from:ran_to],
                              is_training_pl: True,
-                             learning_rate:lr}
-                _,_, le, lg, sm = sess.run([train_gen_op,
-                                            train_enc_op,
-                                            loss_encoder,
-                                            loss_generator,
-                                            sum_op_gen],
-                                           feed_dict=feed_dict)
+                             learning_rate: lr}
+                _, _, le, lg, sm = sess.run([train_gen_op,
+                                             train_enc_op,
+                                             loss_encoder,
+                                             loss_generator,
+                                             sum_op_gen],
+                                            feed_dict=feed_dict)
                 train_loss_gen += lg
                 train_loss_enc += le
                 writer.add_summary(sm, train_batch)
 
                 if t % FREQ_PRINT == 0:  # inspect reconstruction
-                    t= np.random.randint(0,4000)
+                    t = np.random.randint(0, 4000)
                     ran_from = t
                     ran_to = t + batch_size
-                    sm = sess.run(sum_op_im, feed_dict={input_pl: trainx[ran_from:ran_to],is_training_pl: False})
+                    sm = sess.run(sum_op_im, feed_dict={input_pl: trainx[ran_from:ran_to], is_training_pl: False})
                     writer.add_summary(sm, train_batch)
 
                 train_batch += 1
@@ -288,28 +295,27 @@ def train_and_test(nb_epochs, weight, method, degree, random_seed, label):
                   % (epoch, time.time() - begin, train_loss_gen, train_loss_enc, train_loss_dis))
 
             epoch += 1
-            
+
         logger.warn('Testing evaluation...')
 
         inds = rng.permutation(testx.shape[0])
         testx = testx[inds]  # shuffling  dataset
-        testy = testy[inds] # shuffling  dataset
+        testy = testy[inds]  # shuffling  dataset
         scores = []
         inference_time = []
 
         # Create scores
         for t in range(nr_batches_test):
-
             # construct randomly permuted minibatches
             ran_from = t * batch_size
             ran_to = (t + 1) * batch_size
             begin_val_batch = time.time()
 
             feed_dict = {input_pl: testx[ran_from:ran_to],
-                         is_training_pl:False}
+                         is_training_pl: False}
 
             scores += sess.run(list_scores,
-                                         feed_dict=feed_dict).tolist()
+                               feed_dict=feed_dict).tolist()
 
             inference_time.append(time.time() - begin_val_batch)
 
@@ -326,17 +332,18 @@ def train_and_test(nb_epochs, weight, method, degree, random_seed, label):
                      is_training_pl: False}
 
         batch_score = sess.run(list_scores,
-                           feed_dict=feed_dict).tolist()
+                               feed_dict=feed_dict).tolist()
 
         scores += batch_score[:size]
 
         prc_auc = do_prc(scores, testy,
-               file_name=r'bigan/mnist/{}/{}/{}'.format(method, weight,
-                                                     label),
-               directory=r'results/bigan/mnist/{}/{}/'.format(method,
-                                                           weight))
+                         file_name=r'bigan/mnist/{}/{}/{}'.format(method, weight,
+                                                                  label),
+                         directory=r'results/bigan/mnist/{}/{}/'.format(method,
+                                                                        weight))
 
         print("Testing | PRC AUC = {:.4f}".format(prc_auc))
+
 
 def run(nb_epochs, weight, method, degree, label, random_seed=42):
     """ Runs the training process"""

@@ -6,7 +6,6 @@ from sklearn.metrics import roc_curve, auc, average_precision_score, precision_r
 
 def do_prc(scores, true_labels, file_name='', directory='', plot=True):
     """ Does the PRC curve
-
     Args :
             scores (list): list of scores from the decision function
             true_labels (list): list of labels associated to the scores
@@ -27,7 +26,7 @@ def do_prc(scores, true_labels, file_name='', directory='', plot=True):
         plt.ylabel('Precision')
         plt.ylim([0.0, 1.05])
         plt.xlim([0.0, 1.0])
-        plt.title('Precision-Recall curve: AUC=%0.4f' 
+        plt.title('Precision-Recall curve: AUC=%0.4f'
                             %(prc_auc))
         if not os.path.exists(directory):
             os.makedirs(directory)
@@ -35,5 +34,3 @@ def do_prc(scores, true_labels, file_name='', directory='', plot=True):
         plt.close()
 
     return prc_auc
-
-
