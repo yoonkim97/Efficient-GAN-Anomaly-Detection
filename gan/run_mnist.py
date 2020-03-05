@@ -265,7 +265,7 @@ def train_and_test(nb_epochs, weight, method, degree, random_seed, label):
             train_loss_dis /= nr_batches_train
 
             logger.info('Epoch terminated')
-            logger.info("Epoch %d | time = %ds | loss gen = %.4f | loss dis = %.4f "
+            print("Epoch %d | time = %ds | loss gen = %.4f | loss dis = %.4f "
                   % (epoch, time.time() - begin, train_loss_gen, train_loss_dis))
 
             epoch += 1
