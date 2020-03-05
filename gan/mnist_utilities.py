@@ -27,26 +27,26 @@ def generator(z_inp, is_training=False, getter=None, reuse=False):
         (tensor): last activation layer of the generator
 
     """
-    with tf.variable_scope('generator', reuse=reuse, custom_getter=getter):
+    with tf.compat.v1.variable_scope('generator', reuse=reuse, custom_getter=getter):
 
         name_net = 'layer_1'
-        with tf.variable_scope(name_net):
-            net = tf.layers.dense(z_inp,
+        with tf.compat.v1.variable_scope(name_net):
+            net = tf.keras.layers.Dense(z_inp,
                                   units=1024,
                                   kernel_initializer=init_kernel,
                                   name='fc')
-            net = tf.layers.batch_normalization(net,
+            net = tf.keras.layers.BatchNormalization(net,
                                         training=is_training,
                                         name='batch_normalization')
             net = tf.nn.relu(net, name='relu')
 
         name_net = 'layer_2'
-        with tf.variable_scope(name_net):
-            net = tf.layers.dense(net,
+        with tf.compat.v1.variable_scope(name_net):
+            net = tf.keras.layers.Dense(net,
                                   units=7*7*128,
                                   kernel_initializer=init_kernel,
                                   name='fc')
-            net = tf.layers.batch_normalization(net,
+            net = tf.keras.layers.BatchNormalization(net,
                                         training=is_training,
                                         name='batch_normalization')
             net = tf.nn.relu(net, name='relu')
@@ -54,22 +54,22 @@ def generator(z_inp, is_training=False, getter=None, reuse=False):
         net = tf.reshape(net, [-1, 7, 7, 128])
 
         name_net = 'layer_3'
-        with tf.variable_scope(name_net):
-            net = tf.layers.conv2d_transpose(net,
+        with tf.compat.v1.variable_scope(name_net):
+            net = tf.keras.layers.Conv2DTranspose(net,
                                      filters=64,
                                      kernel_size=4,
                                      strides= 2,
                                      padding='same',
                                      kernel_initializer=init_kernel,
                                      name='conv')
-            net = tf.layers.batch_normalization(net,
+            net = tf.keras.layers.BatchNormalization(net,
                                         training=is_training,
                                         name='batch_normalization')
             net = tf.nn.relu(net, name='relu')
 
         name_net = 'layer_4'
-        with tf.variable_scope(name_net):
-            net = tf.layers.conv2d_transpose(net,
+        with tf.compat.v1.variable_scope(name_net):
+            net = tf.keras.layers.Conv2DTranspose(net,
                                      filters=1,
                                      kernel_size=4,
                                      strides=2,
@@ -94,11 +94,11 @@ def discriminator(x_inp, is_training=False, getter=None, reuse=False):
         intermediate_layer (tensor): intermediate layer for feature matching
 
     """
-    with tf.variable_scope('discriminator', reuse=reuse, custom_getter=getter):
+    with tf.compat.v1.variable_scope('discriminator', reuse=reuse, custom_getter=getter):
 
         name_net = 'layer_1'
-        with tf.variable_scope(name_net):
-            net = tf.layers.conv2d(x_inp,
+        with tf.compat.v1.variable_scope(name_net):
+            net = tf.keras.layers.Conv2D(x_inp,
                            filters=64,
                            kernel_size=4,
                            strides=2,
@@ -108,15 +108,15 @@ def discriminator(x_inp, is_training=False, getter=None, reuse=False):
             net = leakyReLu(net, 0.1, name='leaky_relu')
 
         name_net = 'layer_2'
-        with tf.variable_scope(name_net):
-            net = tf.layers.conv2d(net,
+        with tf.compat.v1.variable_scope(name_net):
+            net = tf.keras.layers.Conv2D(net,
                            filters=64,
                            kernel_size=4,
                            strides=2,
                            padding='same',
                            kernel_initializer=init_kernel,
                            name='conv')
-            net = tf.layers.batch_normalization(net,
+            net = tf.keras.layers.BatchNormalization(net,
                                         training=is_training,
                                         name='batch_normalization')
             net = leakyReLu(net, 0.1, name='leaky_relu')
@@ -124,12 +124,12 @@ def discriminator(x_inp, is_training=False, getter=None, reuse=False):
         net = tf.reshape(net, [-1, 7 * 7 * 64])
 
         name_net = 'layer_3'
-        with tf.variable_scope(name_net):
-            net = tf.layers.dense(net,
+        with tf.compat.v1.variable_scope(name_net):
+            net = tf.keras.layers.Dense(net,
                       units=dis_inter_layer_dim,
                       kernel_initializer=init_kernel,
                       name='fc')
-            net = tf.layers.batch_normalization(net,
+            net = tf.keras.layers.BatchNormalization(net,
                                     training=is_training,
                                     name='batch_normalization')
             net = leakyReLu(net, 0.1, name='leaky_relu')
@@ -137,8 +137,8 @@ def discriminator(x_inp, is_training=False, getter=None, reuse=False):
         intermediate_layer = net
 
         name_net = 'layer_4'
-        with tf.variable_scope(name_net):
-            net = tf.layers.dense(net,
+        with tf.compat.v1.variable_scope(name_net):
+            net = tf.keras.layers.Dense(net,
                                   units=1,
                                   kernel_initializer=init_kernel,
                                   name='fc')
@@ -149,7 +149,7 @@ def discriminator(x_inp, is_training=False, getter=None, reuse=False):
 
 def leakyReLu(x, alpha=0.1, name=None):
     if name:
-        with tf.variable_scope(name):
+        with tf.compat.v1.variable_scope(name):
             return _leakyReLu_impl(x, alpha)
     else:
         return _leakyReLu_impl(x, alpha)

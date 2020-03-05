@@ -63,10 +63,9 @@ def train_and_test(nb_epochs, weight, method, degree, random_seed, label):
     logger = logging.getLogger("GAN.train.mnist.{}.{}".format(method,label))
 
     # Placeholders
-    input_pl = tf.placeholder(tf.float32, shape=data.get_shape_input(), name="input")
-    is_training_pl = tf.placeholder(tf.bool, [], name='is_training_pl')
-    learning_rate = tf.placeholder(tf.float32, shape=(), name="lr_pl")
-
+    input_pl = tf.compat.v1.placeholder(tf.float32, shape=data.get_shape_input(), name="input")
+    is_training_pl = tf.compat.v1.placeholder(tf.bool, [], name='is_training_pl')
+    learning_rate = tf.compat.v1.placeholder(tf.float32, shape=(), name="lr_pl")
     # Data
     trainx, trainy = data.get_train(label, True)
     trainx_copy = trainx.copy()
@@ -91,7 +90,7 @@ def train_and_test(nb_epochs, weight, method, degree, random_seed, label):
     dis = network.discriminator
 
     # Sample noise from random normal distribution
-    random_z = tf.random_normal([batch_size, latent_dim], mean=0.0, stddev=1.0, name='random_z')
+    random_z = tf.random.normal([batch_size, latent_dim], mean=0.0, stddev=1.0, name='random_z')
     # Generate images with generator
     generator = gen(random_z, is_training=is_training_pl)
     # Pass real and fake images into discriminator separately
@@ -100,23 +99,23 @@ def train_and_test(nb_epochs, weight, method, degree, random_seed, label):
 
     with tf.name_scope('loss_functions'):
         # Calculate seperate losses for discriminator with real and fake images
-        real_discriminator_loss = tf.losses.sigmoid_cross_entropy(tf.constant(1, shape=[batch_size]), real_d, scope='real_discriminator_loss')
-        fake_discriminator_loss = tf.losses.sigmoid_cross_entropy(tf.constant(0, shape=[batch_size]), fake_d, scope='fake_discriminator_loss')
+        real_discriminator_loss = tf.compat.v1.losses.sigmoid_cross_entropy(tf.constant(1, shape=[batch_size]), real_d, scope='real_discriminator_loss')
+        fake_discriminator_loss = tf.compat.v1.losses.sigmoid_cross_entropy(tf.constant(0, shape=[batch_size]), fake_d, scope='fake_discriminator_loss')
         # Add discriminator losses
         discriminator_loss = real_discriminator_loss + fake_discriminator_loss
         # Calculate loss for generator by flipping label on discriminator output
-        generator_loss = tf.losses.sigmoid_cross_entropy(tf.constant(1, shape=[batch_size]), fake_d, scope='generator_loss')
+        generator_loss = tf.compat.v1.losses.sigmoid_cross_entropy(tf.constant(1, shape=[batch_size]), fake_d, scope='generator_loss')
 
     with tf.name_scope('optimizers'):
         # control op dependencies for batch norm and trainable variables
-        dvars = tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES, scope='discriminator')
-        gvars = tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES, scope='generator')
+        dvars = tf.compat.v1.get_collection(tf.compat.v1.GraphKeys.TRAINABLE_VARIABLES, scope='discriminator')
+        gvars = tf.compat.v1.get_collection(tf.compat.v1.GraphKeys.TRAINABLE_VARIABLES, scope='generator')
 
-        update_ops_gen = tf.get_collection(tf.GraphKeys.UPDATE_OPS, scope='generator')
-        update_ops_dis = tf.get_collection(tf.GraphKeys.UPDATE_OPS, scope='discriminator')
+        update_ops_gen = tf.compat.v1.get_collection(tf.compat.v1.GraphKeys.UPDATE_OPS, scope='generator')
+        update_ops_dis = tf.compat.v1.get_collection(tf.compat.v1.GraphKeys.UPDATE_OPS, scope='discriminator')
 
-        optimizer_dis = tf.train.AdamOptimizer(learning_rate=learning_rate, beta1=0.5, name='dis_optimizer')
-        optimizer_gen = tf.train.AdamOptimizer(learning_rate=learning_rate, beta1=0.5, name='gen_optimizer')
+        optimizer_dis = tf.compat.v1.train.AdamOptimizer(learning_rate=learning_rate, beta1=0.5, name='dis_optimizer')
+        optimizer_gen = tf.compat.v1.train.AdamOptimizer(learning_rate=learning_rate, beta1=0.5, name='gen_optimizer')
 
         with tf.control_dependencies(update_ops_gen): # attached op for moving average batch norm
             gen_op = optimizer_gen.minimize(generator_loss, var_list=gvars)
@@ -137,26 +136,26 @@ def train_and_test(nb_epochs, weight, method, degree, random_seed, label):
 
     with tf.name_scope('training_summary'):
         with tf.name_scope('dis_summary'):
-            tf.summary.scalar('real_discriminator_loss', real_discriminator_loss, ['dis'])
-            tf.summary.scalar('fake_discriminator_loss', fake_discriminator_loss, ['dis'])
-            tf.summary.scalar('discriminator_loss', discriminator_loss, ['dis'])
+            tf.compat.v1.summary.scalar('real_discriminator_loss', real_discriminator_loss, ['dis'])
+            tf.compat.v1.summary.scalar('fake_discriminator_loss', fake_discriminator_loss, ['dis'])
+            tf.compat.v1.summary.scalar('discriminator_loss', discriminator_loss, ['dis'])
 
         with tf.name_scope('gen_summary'):
-            tf.summary.scalar('loss_generator', generator_loss, ['gen'])
+            tf.compat.v1.summary.scalar('loss_generator', generator_loss, ['gen'])
 
         with tf.name_scope('image_summary'):
-            tf.summary.image('reconstruct', generator, 8, ['image'])
-            tf.summary.image('input_images', input_pl, 8, ['image'])
+            tf.compat.v1.summary.image('reconstruct', generator, 8, ['image'])
+            tf.compat.v1.summary.image('input_images', input_pl, 8, ['image'])
 
 
-        sum_op_dis = tf.summary.merge_all('dis')
-        sum_op_gen = tf.summary.merge_all('gen')
-        sum_op_im = tf.summary.merge_all('image')
+        sum_op_dis = tf.compat.v1.summary.merge_all('dis')
+        sum_op_gen = tf.compat.v1.summary.merge_all('gen')
+        sum_op_im = tf.compat.v1.summary.merge_all('image')
 
     logger.info('Building testing graph...')
 
     with tf.variable_scope("latent_variable"):
-        z_optim = tf.get_variable(name='z_optim', shape= [batch_size, latent_dim], initializer=tf.truncated_normal_initializer())
+        z_optim = tf.compat.v1.get_variable(name='z_optim', shape= [batch_size, latent_dim], initializer=tf.truncated_normal_initializer())
         reinit_z = z_optim.initializer
     # EMA
     generator_ema = gen(z_optim, is_training=is_training_pl, getter=get_getter(gen_ema), reuse=True)
@@ -167,7 +166,7 @@ def train_and_test(nb_epochs, weight, method, degree, random_seed, label):
     with tf.name_scope('error_loss'):
         delta = input_pl - generator_ema
         delta_flat = tf.contrib.layers.flatten(delta)
-        gen_score = tf.norm(delta_flat, ord=degree, axis=1, keep_dims=False, name='epsilon')
+        gen_score = tf.norm(delta_flat, ord=degree, axis=1, keepdims=False, name='epsilon')
 
     with tf.variable_scope('Discriminator_loss'):
         if method == "cross-e":
@@ -177,7 +176,7 @@ def train_and_test(nb_epochs, weight, method, degree, random_seed, label):
         elif method == "fm":
             fm = inter_layer_real_ema - inter_layer_fake_ema
             fm = tf.contrib.layers.flatten(fm)
-            dis_score = tf.norm(fm, ord=degree, axis=1, keep_dims=False,
+            dis_score = tf.norm(fm, ord=degree, axis=1, keepdims=False,
                              name='d_loss')
 
         dis_score = tf.squeeze(dis_score)
@@ -189,15 +188,15 @@ def train_and_test(nb_epochs, weight, method, degree, random_seed, label):
         step = tf.Variable(0, trainable=False)
         boundaries = [200, 300]
         values = [0.01, 0.001, 0.0005]
-        learning_rate_invert = tf.train.piecewise_constant(step, boundaries, values)
-        reinit_lr = tf.variables_initializer(
-            tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES,
+        learning_rate_invert = tf.compat.v1.train.piecewise_constant(step, boundaries, values)
+        reinit_lr = tf.compat.v1.variables_initializer(
+            tf.compat.v1.get_collection(tf.compat.v1.GraphKeys.GLOBAL_VARIABLES,
                               scope="Test_learning_rate"))
 
     with tf.name_scope('Test_optimizer'):
-        optimizer = tf.train.AdamOptimizer(learning_rate_invert).minimize(loss, global_step=step, var_list=[z_optim], name='optimizer')
-        reinit_optim = tf.variables_initializer(
-            tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES,
+        optimizer = tf.compat.v1.train.AdamOptimizer(learning_rate_invert).minimize(loss, global_step=step, var_list=[z_optim], name='optimizer')
+        reinit_optim = tf.compat.v1.variables_initializer(
+            tf.compat.v1.get_collection(tf.compat.v1.GraphKeys.GLOBAL_VARIABLES,
                               scope='Test_optimizer'))
 
     reinit_test_graph_op = [reinit_z, reinit_lr, reinit_optim]
@@ -207,7 +206,7 @@ def train_and_test(nb_epochs, weight, method, degree, random_seed, label):
 
     logdir = create_logdir(method, weight, label, random_seed)
 
-    sv = tf.train.Supervisor(logdir=logdir, save_summaries_secs=None,
+    sv = tf.train.MonitoredTrainingSession(logdir=logdir, save_summaries_secs=None,
                              save_model_secs=120)
 
     logger.info('Start training...')
@@ -215,7 +214,7 @@ def train_and_test(nb_epochs, weight, method, degree, random_seed, label):
 
         logger.info('Initialization done')
 
-        writer = tf.summary.FileWriter(logdir, sess.graph)
+        writer = tf.compat.v1.summary.FileWriter(logdir, sess.graph)
 
         train_batch = 0
         epoch = 0
@@ -266,7 +265,7 @@ def train_and_test(nb_epochs, weight, method, degree, random_seed, label):
             train_loss_dis /= nr_batches_train
 
             logger.info('Epoch terminated')
-            logger.info("Epoch %d | time = %ds | loss gen = %.4f | loss dis = %.4f "
+            print("Epoch %d | time = %ds | loss gen = %.4f | loss dis = %.4f "
                   % (epoch, time.time() - begin, train_loss_gen, train_loss_dis))
 
             epoch += 1
@@ -325,5 +324,5 @@ def run(nb_epochs, weight, method, degree, label, random_seed=42):
     """ Runs the training process"""
     with tf.Graph().as_default():
         # Set the graph level seed
-        tf.set_random_seed(random_seed)
+        tf.compat.v1.set_random_seed(random_seed)
         train_and_test(nb_epochs, weight, method, degree, random_seed, label)
