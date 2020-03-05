@@ -31,7 +31,7 @@ def do_prc(scores, true_labels, file_name='', directory='', plot=True):
                             %(prc_auc))
         if not os.path.exists(directory):
             os.makedirs(directory)
-        plt.savefig('results/' + file_name + '_prc.jpg')
+        plt.savefig('results/' + file_name + '_prc.png')
         plt.close()
 
     return prc_auc
